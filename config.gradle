@@ -1,0 +1,18 @@
+ext {
+    buildToolsVersion = "26.0.2"
+    compileSdkVersion = 26
+    minSdkVersion = 17
+    targetSdkVersion = 25
+    versionCode = 1
+    versionName = "1.1.0"
+
+
+    supportLibraryVersion = "26.1.0"
+    retrofitVersion = "2.3.0"
+    rxjavaVersion = "2.1.8"
+    rxlifecycleVersion = "2.2.1"
+    gsonVersion = "2.8.2"
+    lifecycle = "1.0.0"
+    routerVersion = "1.2.4"
+    routerAnnotationProcessor = "1.1.4"
+}
