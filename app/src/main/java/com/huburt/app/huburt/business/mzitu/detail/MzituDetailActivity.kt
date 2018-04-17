@@ -3,6 +3,7 @@ package com.huburt.app.huburt.business.mzitu.detail
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import com.huburt.app.common.base.BaseActivity
 import com.huburt.app.common.ctx.BaseConstants
 import com.huburt.app.huburt.R
@@ -23,6 +24,8 @@ class MzituDetailActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_empty)
 
         val id = intent.extras[BaseConstants.ID] as Int

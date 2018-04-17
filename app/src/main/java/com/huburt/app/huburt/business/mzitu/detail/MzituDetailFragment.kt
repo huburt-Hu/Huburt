@@ -9,15 +9,18 @@ import android.support.v4.view.ViewPager
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import com.blankj.utilcode.util.ConvertUtils
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.BaseViewHolder
 import com.chad.library.adapter.base.listener.OnItemClickListener
+import com.github.chrisbanes.photoview.OnViewTapListener
 import com.github.chrisbanes.photoview.PhotoView
 import com.huburt.app.common.base.BaseFragment
 import com.huburt.app.common.ctx.BaseConstants
 import com.huburt.app.common.imageloader.ImageLoaderManager
+import com.huburt.app.common.imageloader.ImageOptions
 import com.huburt.app.huburt.R
 import com.huburt.app.huburt.util.DividerGridItemDecoration
 import com.huburt.app.huburt.util.buildMzituUrl
@@ -27,7 +30,7 @@ import kotlinx.android.synthetic.main.fragment_mzitu_detail.*
  * Created by hubert on 2018/4/13.
  *
  */
-class MzituDetailFragment : BaseFragment() {
+class MzituDetailFragment : BaseFragment(), OnViewTapListener {
 
     companion object {
         fun newInstance(id: Int): MzituDetailFragment {
@@ -51,16 +54,17 @@ class MzituDetailFragment : BaseFragment() {
         viewModel = ViewModelProviders.of(this)[MzituDetailViewModel::class.java]
         viewModel.liveData.observe(this, Observer {
             val list = it ?: listOf()
-            view_pager.adapter = Adapter(list)
+            view_pager.adapter = Adapter(list, this@MzituDetailFragment)
             rv_small.adapter =
                     object : BaseQuickAdapter<String, BaseViewHolder>(R.layout.item_mzitu_detail, list) {
                         override fun convert(helper: BaseViewHolder, item: String) {
                             val imageView = helper.getView<ImageView>(R.id.iv)
-                            ImageLoaderManager.getInstance().load(imageView, buildMzituUrl(item))
+                            ImageLoaderManager.getInstance().load(imageView, buildMzituUrl(item),
+                                    ImageOptions.newInstance().placeHolder(R.drawable.ic_insert_photo_black_24dp))
                         }
                     }
             total = list.size
-            tv_index.text = "0/$total"
+            title_bar.setTitle("0/$total")
         })
     }
 
@@ -82,15 +86,32 @@ class MzituDetailFragment : BaseFragment() {
             override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
 
             override fun onPageSelected(position: Int) {
-                tv_index.text = "$position/$total"
+                title_bar.setTitle("$position/$total")
             }
         })
 
         viewModel.getData(arguments!!.getInt(BaseConstants.ID))
     }
 
+    override fun onViewTap(view: View?, x: Float, y: Float) {
+        changeTopAndBottomBar()
+    }
 
-    class Adapter(private val list: List<String>) : PagerAdapter() {
+    private fun changeTopAndBottomBar() {
+        if (title_bar.visibility == View.VISIBLE) {
+            title_bar.animation = AnimationUtils.loadAnimation(context, R.anim.top_out)
+            rv_small.animation = AnimationUtils.loadAnimation(context, R.anim.fade_out)
+            title_bar.visibility = View.GONE
+            rv_small.visibility = View.GONE
+        } else {
+            title_bar.animation = AnimationUtils.loadAnimation(context, R.anim.top_in)
+            rv_small.animation = AnimationUtils.loadAnimation(context, R.anim.fade_in)
+            title_bar.visibility = View.VISIBLE
+            rv_small.visibility = View.VISIBLE
+        }
+    }
+
+    class Adapter(private val list: List<String>, val listener: OnViewTapListener) : PagerAdapter() {
 
         override fun isViewFromObject(view: View, `object`: Any): Boolean {
             return view == `object`
@@ -102,7 +123,9 @@ class MzituDetailFragment : BaseFragment() {
 
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
             val photoView = PhotoView(container.context)
-            ImageLoaderManager.getInstance().load(photoView, buildMzituUrl(list[position]))
+            ImageLoaderManager.getInstance().load(photoView, buildMzituUrl(list[position]),
+                    ImageOptions.newInstance().placeHolder(R.drawable.ic_insert_photo_black_24dp))
+            photoView.setOnViewTapListener(listener)
             container.addView(photoView)
             return photoView
         }

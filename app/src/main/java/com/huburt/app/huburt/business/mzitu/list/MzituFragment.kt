@@ -15,6 +15,7 @@ import com.chad.library.adapter.base.BaseViewHolder
 import com.chad.library.adapter.base.listener.OnItemClickListener
 import com.huburt.app.common.base.BaseFragment
 import com.huburt.app.common.imageloader.ImageLoaderManager
+import com.huburt.app.common.imageloader.ImageOptions
 import com.huburt.app.huburt.R
 import com.huburt.app.huburt.bean.BaseResult
 import com.huburt.app.huburt.bean.MeiZiTu
@@ -44,7 +45,8 @@ class MzituFragment : BaseFragment() {
     private val adapter = object : BaseQuickAdapter<MeiZiTu, BaseViewHolder>(R.layout.item_mzitu) {
         override fun convert(helper: BaseViewHolder, item: MeiZiTu) {
             val imageView = helper.getView<ImageView>(R.id.iv)
-            ImageLoaderManager.getInstance().load(imageView, buildMzituUrl(item.thumbUrl))
+            ImageLoaderManager.getInstance().load(imageView, buildMzituUrl(item.thumbUrl),
+                    ImageOptions.newInstance().placeHolder(R.drawable.ic_insert_photo_black_24dp))
 
             val height: Int = item.height * (ScreenUtils.getScreenWidth() / 2) / item.width
             val layoutParams = helper.itemView.layoutParams

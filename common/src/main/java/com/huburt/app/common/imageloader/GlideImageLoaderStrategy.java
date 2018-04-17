@@ -73,17 +73,15 @@ public class GlideImageLoaderStrategy implements ImageLoader {
         if (options != null) {
             if (options.error != -1) {
                 requestOptions = requestOptions.error(options.error);
-            } else {
-//                requestOptions = requestOptions.error(R.drawable.jiazai);
             }
             if (options.errorDrawable != null) {
                 requestOptions = requestOptions.error(options.errorDrawable);
             }
             if (options.placeHolder != -1) {
-                requestOptions = requestOptions.error(options.errorDrawable);
+                requestOptions = requestOptions.placeholder(options.placeHolder);
             }
             if (options.placeHolderDrawable != null) {
-                requestOptions = requestOptions.error(options.placeHolderDrawable);
+                requestOptions = requestOptions.placeholder(options.placeHolderDrawable);
             }
             if (options.shape == ImageOptions.ImageShape.CIRCLE) {
                 requestOptions = requestOptions.circleCrop();
