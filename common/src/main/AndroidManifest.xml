@@ -13,7 +13,7 @@
 
         <provider
             android:name=".ctx.CusFileProvider"
-            android:authorities=".fileprovider"
+            android:authorities="hubert.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
