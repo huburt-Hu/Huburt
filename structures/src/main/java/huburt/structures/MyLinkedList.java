@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 
 /**
  * Created by hubert on 2018/4/27.
- *
+ * <p>
  * 简版LinkedList，基于双向链表实现，并且确保了迭代期间修改时抛出ConcurrentModificationException
  */
 public class MyLinkedList<T> {
@@ -114,7 +114,7 @@ public class MyLinkedList<T> {
         Node<T> prev;
         Node<T> next;
 
-        public Node(T data, Node<T> prev, Node<T> next) {
+        Node(T data, Node<T> prev, Node<T> next) {
             this.data = data;
             this.prev = prev;
             this.next = next;

@@ -17,7 +17,7 @@ public class MyClass {
         for (int i = 0; i < 10; i++) {
             queue.enqueue(i);
         }
-        while (queue.size() > 5) {
+        while (queue.size() > 7) {
             System.out.println(queue.dequeue());
         }
         for (int i = 10; i < 20; i++) {

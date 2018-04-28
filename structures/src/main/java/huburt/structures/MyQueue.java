@@ -82,13 +82,13 @@ public class MyQueue<T> {
     @SuppressWarnings("unchecked")
     private void ensureCapacity() {
         if (back == array.length - 1) {//队尾到达数组末端
-            if (size == array.length) {//队列元素与数组元素相等，需要扩展数组
+            if (size >= array.length * 2 / 3) {//需要扩展数组
                 T[] old = array;
                 array = (T[]) new Object[array.length * 2 + 1];
                 for (int i = 0; i < old.length; i++) {
                     array[i] = old[i];
                 }
-            } else {//数组前端有空缺，移动元素到起始
+            } else {//移动元素到起始
                 for (int i = front; i <= back; i++) {
                     array[i - front] = array[i];
                     array[i] = null;
