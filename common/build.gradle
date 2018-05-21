@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -98,4 +99,8 @@ dependencies {
     }
     api 'com.github.bumptech.glide:okhttp3-integration:4.5.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.5.0'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }
