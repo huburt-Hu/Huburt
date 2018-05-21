@@ -111,7 +111,7 @@ class MzituDetailFragment : BaseFragment(), OnViewTapListener {
         }
     }
 
-    class Adapter(private val list: List<String>, val listener: OnViewTapListener) : PagerAdapter() {
+    private class Adapter(private val list: List<String>, val listener: OnViewTapListener) : PagerAdapter() {
 
         override fun isViewFromObject(view: View, `object`: Any): Boolean {
             return view == `object`

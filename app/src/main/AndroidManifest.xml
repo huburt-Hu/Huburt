@@ -25,10 +25,6 @@
         </activity>
 
         <activity android:name=".business.mzitu.detail.MzituDetailActivity" />
-
-        <activity android:name=".test.ResourceActivity" >
-
-        </activity>
     </application>
 
 </manifest>

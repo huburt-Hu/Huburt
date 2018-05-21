@@ -36,7 +36,6 @@ class MzituFragment : BaseFragment() {
         }
     }
 
-
     private val titles: Array<String> = arrayOf("首页", "最热", "推荐", "性感", "日本", "台湾", "MM")
     private lateinit var mzituViewModel: MzituViewModel
     private var page: Int = 0
