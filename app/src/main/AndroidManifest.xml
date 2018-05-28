@@ -16,12 +16,16 @@
             android:name="com.huburt.app.huburt.AppConfig"
             android:value="Architecture_ConfigModule" />
 
-        <activity android:name=".business.MainActivity">
+        <activity android:name=".TestActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity android:name=".business.MainActivity">
+
         </activity>
 
         <activity android:name=".business.mzitu.detail.MzituDetailActivity" />

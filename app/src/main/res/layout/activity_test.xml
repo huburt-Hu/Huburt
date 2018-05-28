@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.huburt.app.huburt.widget.BooheeRulerView
+        android:id="@+id/ruler"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
+
+    <com.huburt.app.huburt.widget.BookView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="2dp"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="50dp" />
+</LinearLayout>
