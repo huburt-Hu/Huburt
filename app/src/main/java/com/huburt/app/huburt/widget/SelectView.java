@@ -40,14 +40,12 @@ public class SelectView extends View {
     public static final int MESSAGE_MOVE = 11;
     public static final int MESSAGE_EXTEND = 22;
 
-    private static String[] titles = {"09:00", "09:30", "10:00", "10:30", "11:00",
+    public String[] titles = {"09:00", "09:30", "10:00", "10:30", "11:00",
             "11:30", "12:00", "12:30", "13:00", "13:30",
             "14:00", "14:30", "15:00", "15:30", "16:00",
             "16:30", "17:00", "17:30", "18:00"};
-
-    private final int DEFAULT_HEIGHT = dp2px(100);//wrap_content高度
-    private final int CLICK_SPACE = 2;//点击默认选中区域范围
-
+    private int DEFAULT_HEIGHT = dp2px(100);//wrap_content高度
+    private int CLICK_SPACE = 2;//点击默认选中区域范围
     private int space = dp2px(40);//刻度间隔
     private int lineWidth = dp2px(1);//刻度线的宽度
     private int textSize = dp2px(12);
@@ -61,17 +59,19 @@ public class SelectView extends View {
     private int overlappingStrokeColor = Color.parseColor("#FF6666");
     private int selectedStrokeWidth = dp2px(2);
     private int extendRadius = dp2px(7);//扩展圆的半径
-    private float touchRate = 1.5f;//扩展触摸区域与视图的比率(>=1)
+    private float extendTouchRate = 1.5f;//扩展触摸区域与视图的比率(>=1)
     private int boundary = space / 2;//屏幕边界范围
     private float linkDx = 40;//联动速率(>=1)
-    private int minSelect = 2;
+    private int minSelect = 2;//最小选择count
+    private Bitmap bitmap;//不可选区域贴图
+    private BitmapShader bitmapShader;
 
     private int minFlingVelocity;//最小惯性滑动速度
     private int touchSlop;//最小滑动距离
     private int width;
     private int height;
     private int maxWidth;//最大内容宽度
-    private int totalWidth;//控件整体宽度
+    private int totalWidth;//刻度尺整体宽度
     private int minOffset = 0;
     private int maxOffset;
     private int offset = minOffset;//可视区域左边界与整体内容左边界的偏移量
@@ -83,16 +83,15 @@ public class SelectView extends View {
     private float areaTop;//选择区域top
     private boolean lastOverlappingState;//判断是否改变覆盖状态
     private int[] lastSelected = new int[2];//判断是否改变了选择区域
+    private List<int[]> unselectableList = new ArrayList<>();
 
     private Paint mPaint;
     private VelocityTracker velocityTracker;
     private OverScroller scroller;
-    private List<RectF> unselectableList = new ArrayList<>();
+    private List<RectF> unselectableRectFs = new ArrayList<>();
     private RectF tempRect = new RectF();
     private RectF selectedRectF;//选择区域位置
     private RectF extendPointRectF;//扩展点位置
-    private Bitmap bitmap;//不可选区域贴图
-    private BitmapShader bitmapShader;
     private boolean linking;//是否正在联动
     private Handler handler = new BookHandler(this);
     private OverlappingStateChangeListener overlappingStateListener;
@@ -144,11 +143,10 @@ public class SelectView extends View {
 
     public SelectView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        scroller = new OverScroller(context);
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setTextSize(textSize);
@@ -157,6 +155,7 @@ public class SelectView extends View {
         bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bg);
         bitmapShader = new BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
 
+        scroller = new OverScroller(context);
         minFlingVelocity = ViewConfiguration.get(getContext()).getScaledMinimumFlingVelocity();
         touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
     }
@@ -192,9 +191,28 @@ public class SelectView extends View {
         Timber.i("maxWidth:" + maxWidth);
         Timber.i("offset:" + offset);
         Timber.i("maxOffset:" + maxOffset);
+    }
 
-        unselectableList.add(new RectF(3 * space, areaTop, 4 * space, height));
-//        setSelectedRectF(6, 4);
+    private void generateUnselectableRectFs() {
+        //避免重复生成
+        if (unselectableRectFs.size() > 0
+                && unselectableList.size() == unselectableRectFs.size()) {
+            return;
+        }
+        unselectableRectFs.clear();
+        for (int[] ints : unselectableList) {
+            int start = ints[0];
+            int count = ints[1];
+            int max = titles.length - 1;
+            if (start > max || start + count > max) {
+                throw new IllegalArgumentException("unselectable area has wrong start or count, " +
+                        "the total limit is" + max);
+            }
+            if (count > 0) {
+                unselectableRectFs.add(new RectF(start * space, areaTop,
+                        (start + count) * space, height));
+            }
+        }
     }
 
     @Override
@@ -205,11 +223,20 @@ public class SelectView extends View {
         drawSelected(canvas);
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        velocityTracker.recycle();
+        bitmap.recycle();
+        handler.removeCallbacksAndMessages(null);
+    }
+
     private void drawLine(Canvas canvas) {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(lineWidth);
         mPaint.setColor(Color.BLACK);
-        canvas.drawLine(0, height, width, height, mPaint);
+        float right = Math.min(width, maxWidth - offset);
+        canvas.drawLine(0, height, right, height, mPaint);
         for (int i = 0; i < titles.length; i++) {
             int position = i * space;
             if (position >= offset && position <= offset + width) {
@@ -228,11 +255,12 @@ public class SelectView extends View {
     }
 
     private void drawUnselectable(Canvas canvas) {
+        generateUnselectableRectFs();
         mPaint.setStyle(Paint.Style.FILL);
 //        mPaint.setShader(bitmapShader);
         // TODO:hxb 2018/5/29 改回bitmap
         mPaint.setColor(Color.parseColor("#99878787"));
-        for (RectF rectF : unselectableList) {
+        for (RectF rectF : unselectableRectFs) {
             float left = Math.max(rectF.left, offset) - offset;
             float right = Math.min(rectF.right, offset + width) - offset;
             tempRect.set(left, rectF.top, right, rectF.bottom);
@@ -271,11 +299,11 @@ public class SelectView extends View {
             mPaint.setColor(Color.WHITE);
             mPaint.setStyle(Paint.Style.FILL);
             canvas.drawCircle(tempRect.right, tempRect.centerY(), extendRadius, mPaint);
-
-            extendPointRectF = new RectF(selectedRectF.right - extendRadius * touchRate,
-                    selectedRectF.centerY() - extendRadius * touchRate,
-                    selectedRectF.right + extendRadius * touchRate,
-                    selectedRectF.centerY() + extendRadius * touchRate);
+            //扩展圆的位置信息，处理touch事件需要
+            extendPointRectF = new RectF(selectedRectF.right - extendRadius * extendTouchRate,
+                    selectedRectF.centerY() - extendRadius * extendTouchRate,
+                    selectedRectF.right + extendRadius * extendTouchRate,
+                    selectedRectF.centerY() + extendRadius * extendTouchRate);
         } else {
             extendPointRectF = null;
         }
@@ -283,7 +311,7 @@ public class SelectView extends View {
 
     private boolean checkOverlapping() {
         if (selectedRectF != null) {
-            for (RectF rectF : unselectableList) {
+            for (RectF rectF : unselectableRectFs) {
                 if (rectF.intersects(selectedRectF.left, selectedRectF.top,
                         selectedRectF.right, selectedRectF.bottom)) {
                     return true;
@@ -340,7 +368,6 @@ public class SelectView extends View {
                 }
 
                 handleActionUp(upX);
-                touchType = TYPE_SLIDE;
                 break;
             default:
                 break;
@@ -362,9 +389,7 @@ public class SelectView extends View {
             Timber.i("selected:" + selected.toString());
         }
 
-        if (selectedRectF == null) {
-            touchType = TYPE_CLICK;
-        } else if (extend != null && extend.contains(lastX, downY)) {
+        if (extend != null && extend.contains(lastX, downY)) {
             touchType = TYPE_EXTEND;
         } else if (selected != null && selected.contains(lastX, downY)) {
             touchType = TYPE_MOVE;
@@ -432,9 +457,8 @@ public class SelectView extends View {
     private void handleActionUp(float upX) {
         if (touchType == TYPE_CLICK) {
             int start = (int) ((upX + offset) / space);
-            int[] area = getSelectedArea();
-            setSelectedRectF(start, area == null ? CLICK_SPACE : area[1]);
-            postInvalidate();
+            int[] area = getSelected();
+            setSelected(start, area == null ? CLICK_SPACE : area[1]);
         } else if (touchType == TYPE_EXTEND) {
             stopLinking();
             int right = Math.round(selectedRectF.right / space) * space;
@@ -442,10 +466,9 @@ public class SelectView extends View {
             postInvalidate();
         } else if (touchType == TYPE_MOVE) {
             stopLinking();
-            int[] area = getSelectedArea();
+            int[] area = getSelected();
             if (area != null) {
-                setSelectedRectF(area[0], area[1]);
-                postInvalidate();
+                setSelected(area[0], area[1]);
             }
         } else if (touchType == TYPE_SLIDE) {
             //处理惯性滑动
@@ -476,36 +499,6 @@ public class SelectView extends View {
     }
 
     /**
-     * 将选择内容转换成区域
-     *
-     * @param start 开始位置
-     * @param count 数量
-     */
-    private void setSelectedRectF(int start, int count) {
-        int right = (start + count) * space;
-        if (right > maxWidth) {
-            int cut = Math.round((right - maxWidth) * 1f / space);
-            start -= cut;//整体向左移动
-            right = maxWidth;
-        }
-        if (selectedRectF == null) {
-            selectedRectF = new RectF(start * space, areaTop, right, height);
-        } else {
-            selectedRectF.set(start * space, areaTop, right, height);
-        }
-        notifySelectChangeListener(start, count);
-    }
-
-    private void notifySelectChangeListener(int start, int count) {
-        if (selectChangeListener != null
-                && (lastSelected[0] != start || lastSelected[1] != count)) {
-            selectChangeListener.onSelectChanged(start, count);
-            lastSelected[0] = start;
-            lastSelected[1] = count;
-        }
-    }
-
-    /**
      * 重置选择区域的位置
      *
      * @param left
@@ -531,7 +524,7 @@ public class SelectView extends View {
         }
         selectedRectF.left = left;
         selectedRectF.right = right;
-        int[] area = getSelectedArea();
+        int[] area = getSelected();
         if (area != null) {
             notifySelectChangeListener(area[0], area[1]);
         }
@@ -556,10 +549,64 @@ public class SelectView extends View {
             }
         }
         selectedRectF.right = right;
-        int[] area = getSelectedArea();
+        int[] area = getSelected();
         if (area != null) {
             notifySelectChangeListener(area[0], area[1]);
         }
+    }
+
+    private void notifySelectChangeListener(int start, int count) {
+        if (selectChangeListener != null
+                && (lastSelected[0] != start || lastSelected[1] != count)) {
+            selectChangeListener.onSelectChanged(start, count);
+            lastSelected[0] = start;
+            lastSelected[1] = count;
+        }
+    }
+
+    public void addUnseletable(int start, int count) {
+        unselectableList.add(new int[]{start, count});
+        postInvalidate();
+    }
+
+    /**
+     * 将选择内容转换成区域
+     *
+     * @param start 开始位置
+     * @param count 数量
+     */
+    public void setSelected(int start, int count) {
+        if (start > titles.length - 1) {
+            throw new IllegalArgumentException("wrong start");
+        }
+        int right = (start + count) * space;
+        if (right > maxWidth) {
+//            int cut = Math.round((right - maxWidth) * 1f / space);
+//            start -= cut;//整体向左移动
+            right = maxWidth;
+        }
+        int left = start * space;
+        if (selectedRectF == null) {
+            selectedRectF = new RectF(left, areaTop, right, height);
+            if (selectChangeListener != null) {
+                selectChangeListener.onSelected();
+            }
+        } else {
+            selectedRectF.set(left, areaTop, right, height);
+        }
+        notifySelectChangeListener(start, count);
+        postInvalidate();
+    }
+
+    public void clearSelected() {
+        selectedRectF = null;
+        extendPointRectF = null;
+        postInvalidate();
+    }
+
+    public void clearUnselectable() {
+        unselectableList.clear();
+        unselectableRectFs.clear();
     }
 
     /**
@@ -567,7 +614,7 @@ public class SelectView extends View {
      *
      * @return [start, count]
      */
-    private int[] getSelectedArea() {
+    public int[] getSelected() {
         if (selectedRectF == null) {
             return null;
         }
@@ -581,10 +628,9 @@ public class SelectView extends View {
     @Override
     public void computeScroll() {
         if (scroller.computeScrollOffset()) {
-            int finalX = scroller.getFinalX();
             int currX = scroller.getCurrX();
             float dx = currX - lastFling;
-            //已经在边界了，不在处理惯性
+            //已经在边界了，不再处理惯性
             if ((offset <= minOffset && dx > 0) || offset >= maxOffset && dx < 0) {
                 scroller.forceFinished(true);
                 return;
@@ -595,14 +641,6 @@ public class SelectView extends View {
         } else {
             lastFling = 0;
         }
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        velocityTracker.recycle();
-        bitmap.recycle();
-        handler.removeCallbacksAndMessages(null);
     }
 
     public OverlappingStateChangeListener getOverlappingStateListener() {
@@ -626,6 +664,8 @@ public class SelectView extends View {
     }
 
     public interface SelectChangeListener {
+        void onSelected();
+
         void onSelectChanged(int start, int count);
     }
 }
