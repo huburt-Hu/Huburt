@@ -56,8 +56,8 @@ public class TestActivity extends BaseActivity {
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int[] selected = selectView.getSelected();
-                selectView.setSelected(selected[0], selected[1] + 1);
+                int[] selected = selectView.getSelectedArea();
+                selectView.setSelectedArea(selected[0], selected[1] + 1);
 
             }
         });
@@ -65,8 +65,8 @@ public class TestActivity extends BaseActivity {
         btnReduce.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int[] selected = selectView.getSelected();
-                selectView.setSelected(selected[0], selected[1] - 1);
+                int[] selected = selectView.getSelectedArea();
+                selectView.setSelectedArea(selected[0], selected[1] - 1);
             }
         });
         btnOk = findViewById(R.id.ok);
