@@ -44,15 +44,17 @@ public class SelectView extends View {
             "11:30", "12:00", "12:30", "13:00", "13:30",
             "14:00", "14:30", "15:00", "15:30", "16:00",
             "16:30", "17:00", "17:30", "18:00"};
-    private int DEFAULT_HEIGHT = dp2px(100);//wrap_content高度
+    private int DEFAULT_HEIGHT = dp2px(68);//wrap_content高度
     private int CLICK_SPACE = 2;//点击默认选中区域范围
     private int space = dp2px(40);//刻度间隔
     private int lineWidth = dp2px(1);//刻度线的宽度
+    private int lineColor = Color.parseColor("#E6E6E6");
     private int textSize = dp2px(12);
+    private int textColor = Color.BLACK;
     private int textMargin = dp2px(8);//文字与长刻度的margin值
     private int rate = 1;   //短刻度与长刻度数量的比例(>=1)
-    private float lineRate = 0.4f;//短刻度与长刻度长度的比例(0.0~1.0)
-    private float areaRate = 0.7f;//选择区域高度占整体高度比例(0.0~1.0)
+    private float lineRate = 0.44f;//短刻度与长刻度长度的比例(0.0~1.0)
+    private float areaRate = 0.73f;//选择区域高度占整体高度比例(0.0~1.0)
     private int selectedBgColor = Color.parseColor("#654196F5");
     private int selectedStrokeColor = Color.parseColor("#4196F5");
     private int overlappingBgColor = Color.parseColor("#65FF6666");
@@ -62,7 +64,7 @@ public class SelectView extends View {
     private float extendTouchRate = 1.5f;//扩展触摸区域与视图的比率(>=1)
     private int boundary = space / 2;//屏幕边界范围
     private float linkDx = 40;//联动速率(>=1)
-    private int minSelect = 2;//最小选择count
+    public int minSelect = 2;//最小选择count
     private Bitmap bitmap;//不可选区域贴图
     private BitmapShader bitmapShader;
 
@@ -226,15 +228,18 @@ public class SelectView extends View {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        velocityTracker.recycle();
-        bitmap.recycle();
-        handler.removeCallbacksAndMessages(null);
+        if (velocityTracker != null) {
+            velocityTracker.recycle();
+            velocityTracker = null;
+        }
+        if (bitmap != null && !bitmap.isRecycled()) bitmap.recycle();
+        if (handler != null) handler.removeCallbacksAndMessages(null);
     }
 
     private void drawLine(Canvas canvas) {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(lineWidth);
-        mPaint.setColor(Color.BLACK);
+        mPaint.setColor(lineColor);
         float right = Math.min(width, maxWidth - offset);
         canvas.drawLine(0, height, right, height, mPaint);
         for (int i = 0; i < titles.length; i++) {
@@ -245,8 +250,10 @@ public class SelectView extends View {
                     canvas.drawLine(x, 0, x, height, mPaint);
 
                     mPaint.setStyle(Paint.Style.FILL);
+                    mPaint.setColor(textColor);
                     canvas.drawText(titles[i], x + textMargin, textSize, mPaint);
                     mPaint.setStyle(Paint.Style.STROKE);
+                    mPaint.setColor(lineColor);
                 } else {
                     canvas.drawLine(x, height * (1 - lineRate), x, height, mPaint);
                 }
@@ -257,16 +264,14 @@ public class SelectView extends View {
     private void drawUnselectable(Canvas canvas) {
         generateUnselectableRectFs();
         mPaint.setStyle(Paint.Style.FILL);
-//        mPaint.setShader(bitmapShader);
-        // TODO:hxb 2018/5/29 改回bitmap
-        mPaint.setColor(Color.parseColor("#99878787"));
+        mPaint.setShader(bitmapShader);
         for (RectF rectF : unselectableRectFs) {
             float left = Math.max(rectF.left, offset) - offset;
             float right = Math.min(rectF.right, offset + width) - offset;
             tempRect.set(left, rectF.top, right, rectF.bottom);
             canvas.drawRect(tempRect, mPaint);
         }
-//        mPaint.setShader(null);
+        mPaint.setShader(null);
     }
 
     private void drawSelected(Canvas canvas) {
@@ -348,6 +353,10 @@ public class SelectView extends View {
             case MotionEvent.ACTION_MOVE:
                 float x = event.getX();
                 float dx = x - lastX;
+                if (Math.abs(dx) > touchSlop) {
+                    //view独享事件，即父view不可以获取后续事件，scrollview默认是false
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
                 if (touchType == TYPE_EXTEND) {
                     handleExtend(dx);
                 } else if (touchType == TYPE_MOVE) {
@@ -457,8 +466,8 @@ public class SelectView extends View {
     private void handleActionUp(float upX) {
         if (touchType == TYPE_CLICK) {
             int start = (int) ((upX + offset) / space);
-            int[] area = getSelected();
-            setSelected(start, area == null ? CLICK_SPACE : area[1]);
+            int[] area = getSelectedArea();
+            setSelectedArea(start, area == null ? CLICK_SPACE : area[1]);
         } else if (touchType == TYPE_EXTEND) {
             stopLinking();
             int right = Math.round(selectedRectF.right / space) * space;
@@ -466,9 +475,9 @@ public class SelectView extends View {
             postInvalidate();
         } else if (touchType == TYPE_MOVE) {
             stopLinking();
-            int[] area = getSelected();
+            int[] area = getSelectedArea();
             if (area != null) {
-                setSelected(area[0], area[1]);
+                setSelectedArea(area[0], area[1]);
             }
         } else if (touchType == TYPE_SLIDE) {
             //处理惯性滑动
@@ -524,7 +533,7 @@ public class SelectView extends View {
         }
         selectedRectF.left = left;
         selectedRectF.right = right;
-        int[] area = getSelected();
+        int[] area = getSelectedArea();
         if (area != null) {
             notifySelectChangeListener(area[0], area[1]);
         }
@@ -549,7 +558,7 @@ public class SelectView extends View {
             }
         }
         selectedRectF.right = right;
-        int[] area = getSelected();
+        int[] area = getSelectedArea();
         if (area != null) {
             notifySelectChangeListener(area[0], area[1]);
         }
@@ -575,8 +584,8 @@ public class SelectView extends View {
      * @param start 开始位置
      * @param count 数量
      */
-    public void setSelected(int start, int count) {
-        if (start > titles.length - 1) {
+    public void setSelectedArea(int start, int count) {
+        if (start > titles.length - 1 - minSelect) {
             throw new IllegalArgumentException("wrong start");
         }
         int right = (start + count) * space;
@@ -586,6 +595,11 @@ public class SelectView extends View {
             right = maxWidth;
         }
         int left = start * space;
+        //处理最小选择
+        int minSpace = minSelect * space;
+        if (right - left < minSpace) {
+            right = left + minSpace;
+        }
         if (selectedRectF == null) {
             selectedRectF = new RectF(left, areaTop, right, height);
             if (selectChangeListener != null) {
@@ -594,6 +608,7 @@ public class SelectView extends View {
         } else {
             selectedRectF.set(left, areaTop, right, height);
         }
+        count = (right - left) / space;
         notifySelectChangeListener(start, count);
         postInvalidate();
     }
@@ -609,12 +624,16 @@ public class SelectView extends View {
         unselectableRectFs.clear();
     }
 
+    public int getmaxCount() {
+        return titles.length - 1;
+    }
+
     /**
      * 将选中区域转换成选择内容
      *
      * @return [start, count]
      */
-    public int[] getSelected() {
+    public int[] getSelectedArea() {
         if (selectedRectF == null) {
             return null;
         }
