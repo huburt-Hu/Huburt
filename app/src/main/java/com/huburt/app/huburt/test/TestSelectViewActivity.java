@@ -1,4 +1,4 @@
-package com.huburt.app.huburt;
+package com.huburt.app.huburt.test;
 
 import android.os.Bundle;
 import android.view.View;
@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.huburt.app.common.base.BaseActivity;
+import com.huburt.app.huburt.R;
 import com.huburt.app.huburt.widget.SelectView;
 
 import timber.log.Timber;
@@ -14,7 +15,7 @@ import timber.log.Timber;
 /**
  * Created by hubert on 2018/5/25.
  */
-public class TestActivity extends BaseActivity {
+public class TestSelectViewActivity extends BaseActivity {
 
     private SelectView selectView;
     private Button btnOk;

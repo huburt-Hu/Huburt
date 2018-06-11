@@ -11,24 +11,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".test.TestSelectViewActivity"></activity>
+        <activity android:name=".test.TestIOSTitleActivity">
+
+        </activity>
 
         <meta-data
             android:name="com.huburt.app.huburt.AppConfig"
             android:value="Architecture_ConfigModule" />
 
-        <activity android:name=".TestActivity" >
+        <activity android:name=".business.MainActivity"></activity>
+        <activity android:name=".business.mzitu.detail.MzituDetailActivity" />
+        <activity
+            android:name=".test.ScrollingActivity"
+            android:label="@string/title_activity_scrolling"
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".business.MainActivity">
-
-        </activity>
-
-        <activity android:name=".business.mzitu.detail.MzituDetailActivity" />
     </application>
 
 </manifest>
