@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "347687775022",
+    "firebase_url": "https://huburt-404db.firebaseio.com",
+    "project_id": "huburt-404db",
+    "storage_bucket": "huburt-404db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347687775022:android:7cdd0a323855bc86",
+        "android_client_info": {
+          "package_name": "com.huburt.app.huburt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "347687775022-dl8oc0sgbg5epqa1asedafhbf0g6a2jk.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "347687775022-dl8oc0sgbg5epqa1asedafhbf0g6a2jk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAO0ac_i_q9C2hj_mACDUgaJAwsb8pPNOg"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
