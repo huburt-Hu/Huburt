@@ -51,6 +51,9 @@
             android:name=".test.ScrollingActivity"
             android:label="@string/title_activity_scrolling"
             android:theme="@style/AppTheme">
+
+        </activity>
+        <activity android:name=".test.TestRoomActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
