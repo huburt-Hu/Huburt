@@ -51,4 +51,15 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:$room_version"
     // optional - RxJava support for Room
     implementation "android.arch.persistence.room:rxjava2:$room_version"
+
+
+    def paging_version = "1.0.0"
+
+    implementation "android.arch.paging:runtime:$paging_version"
+
+    // alternatively - without Android dependencies for testing
+    testImplementation "android.arch.paging:common:$paging_version"
+
+    // optional - RxJava support, currently in release candidate
+    implementation "android.arch.paging:rxjava2:1.0.1"
 }
