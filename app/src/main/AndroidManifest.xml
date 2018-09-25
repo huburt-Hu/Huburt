@@ -50,7 +50,11 @@
             android:name=".test.ScrollingActivity"
             android:label="@string/title_activity_scrolling"
             android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity android:name=".test.TestRoomActivity"></activity>
         <activity android:name=".test.TestConstraintLayoutActivity">
@@ -58,11 +62,7 @@
         </activity>
 
         <activity android:name=".paging.TestPagingActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

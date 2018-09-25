@@ -1,1 +1,1 @@
-include ':app', ':common', ':design', ':structures', ':test'
+include ':app', ':common', ':design', ':structures', ':test', ':algorithm'
